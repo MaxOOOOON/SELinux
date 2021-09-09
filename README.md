@@ -127,20 +127,19 @@
 - audit2allow
 - audit2why
 
-<<<<<<< HEAD
-Контексты /etc/selinux/targeted/contexts/files
-информацию о правах пользователей
-semanage login -l
-ps -Z 6798
-sesearch -A -s httpd_t | grep 'allow httpd_t' разрешающих правил для типа httpd_t
-/etc/selinux/config  Конфигурация SELinux:
-sestatus или getenforce
-setenforce 0
-restorecon -v /home/user Восстанавливаем контекст каталога
+Контексты /etc/selinux/targeted/contexts/files  
+информацию о правах пользователей  
+semanage login -l  
+ps -Z 6798  
+sesearch -A -s httpd_t | grep 'allow httpd_t' разрешающих правил для типа httpd_t  
+/etc/selinux/config  Конфигурация SELinux:  
+sestatus или getenforce  
+setenforce 0  
+restorecon -v /home/user Восстанавливаем контекст каталога  
 
-audit2allow -M httpd_add --debug < /var/log/audit/audit.log
-semodule -i httpd_add.pp
-Параметризованные политики SELinux
-getsebool -a | grep samba
-setsebool -P samba_share_fusefs on
+audit2allow -M httpd_add --debug < /var/log/audit/audit.log  
+semodule -i httpd_add.pp  
+Параметризованные политики SELinux  
+getsebool -a | grep samba  
+setsebool -P samba_share_fusefs on  
 
