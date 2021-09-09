@@ -54,15 +54,91 @@
 
         Формируем модуль с правилами  
 
-            audit2allow -M httpd_allow_port --debug < /var/log/audit/audit.log
+            audit2allow -M httpd_allow_port --debug < log_nginx
+
+        Загружаем модуль 
+        
+            semodule -i httpd_allow_port.pp
+
+        Проверка:
+        ![Screenshot 2021-09-06 235136](https://i.imgur.com/53SmBel.png)
 
 
 
 
 
+1. Развернуть приложенный стенд https://github.com/mbfx/otus-linux-adm/tree/master/selinux_dns_problems и выяснить причину неработоспособности механизма обновления зоны
 
-1. развернуть приложенный стенд https://github.com/mbfx/otus-linux-adm/tree/master/selinux_dns_problems  
+При попытке удаленно (с рабочей станции) внести изменения в зону ddns.lab происходит следующее:
 
-**выяснить причину неработоспособности механизма обновления зоны**
+    [vagrant@client ~]$ nsupdate -k /etc/named.zonetransfer.key
+    > server 192.168.50.10
+    > zone ddns.lab
+    > update add www.ddns.lab. 60 A 192.168.50.15
+    > send
+    update failed: SERVFAIL
+
+Для выяснения причины сначала выполняем на сервере 
+
+    cat  /var/log/audit/audit.log | audit2why
+
+![Screenshot 2021-09-07 231917](https://i.imgur.com/T4Vawpq.png)
+
+Из вывода видно, что проблема с named.ddns.lab.view1.jnl
+Также смотрим статус named.service
+![Screenshot 2021-09-08 232831](https://i.imgur.com/OsLthjK.png)
+
+Проблема с созданием файла в директории /etc/named/dynamic
+
+Смотрим контекст для директории
+
+    ls -Z /etc/named/dynamic/
+
+Установлен контекст etc_t. 
+По документу https://www.systutorials.com/docs/linux/man/8-bind_selinux/, контекст для папки /etc/named/dynamic  должен быть named_cache_t ( по доке размещается в другой директории )
+
+Изменяем контекст на нужный 
+
+    chcon -t named_cache_t -R /etc/named/dynamic/
+
+Проверяем изменение зоны на клиенте 
+
+![Screenshot 2021-09-09 184713](https://i.imgur.com/9j1mrOQ.png)
+
+Проверяем статус named.service
+
+![Screenshot 2021-09-09 212507](https://i.imgur.com/ie3GcK2.png)
+
+Зона успешно обновилась
+
+Для сохранения изменений после перезагрузки необходимо выполнить команду 
+
+     semanage fcontext -a -t named_cache_t "/etc/named/dynamic(/.*)?"
 
 
+
+Полезные команды: 
+
+- sesearch
+- seinfo
+- findcon
+- getsebool
+- setsebool
+- audit2allow
+- audit2why
+
+Контексты /etc/selinux/targeted/contexts/files
+информацию о правах пользователей
+semanage login -l
+ps -Z 6798
+sesearch -A -s httpd_t | grep 'allow httpd_t' разрешающих правил для типа httpd_t
+/etc/selinux/config  Конфигурация SELinux:
+sestatus или getenforce
+setenforce 0
+restorecon -v /home/user Восстанавливаем контекст каталога
+
+audit2allow -M httpd_add --debug < /var/log/audit/audit.log
+semodule -i httpd_add.pp
+Параметризованные политики SELinux
+getsebool -a | grep samba
+setsebool -P samba_share_fusefs on
