@@ -93,7 +93,7 @@
 Смотрим контекст для директории
 
     ls -Z /etc/named/dynamic/
-
+![Screenshot 2021-09-08 232904](https://i.loli.net/2021/09/10/3DS9ztpLQFVBjdc.png)
 Установлен контекст etc_t. 
 По документу https://www.systutorials.com/docs/linux/man/8-bind_selinux/, контекст для папки /etc/named/dynamic  должен быть named_cache_t ( по доке размещается в другой директории )
 
@@ -137,7 +137,7 @@ sestatus или getenforce
 setenforce 0
 restorecon -v /home/user Восстанавливаем контекст каталога
 
-audit2allow -M httpd_add --debug < /var/log/audit/audit.log
+audit2allow -M httpd_add --debug < /var/log/audit![Screenshot 2021-09-08 232904](undefined)/audit.log![Screenshot 2021-09-08 232904](https://i.imgur.com/RiVcE9a.png)
 semodule -i httpd_add.pp
 Параметризованные политики SELinux
 getsebool -a | grep samba
